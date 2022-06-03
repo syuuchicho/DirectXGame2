@@ -13,9 +13,28 @@ GameScene::~GameScene() {
 }
 
 //度数法
-float Angle(float const &n)
+float Angle(float const& n)
 {
-	return n*3.14/180;
+	return n * 3.14 / 180;
+}
+
+float Radian(float const& n)
+{
+	return n / 3.14 * 180;
+}
+
+//クランプ
+float Clamp(float const& min, float const& max, float num)
+{
+	if (num < min)
+	{
+		return min;
+	}
+	else if (num > max)
+	{
+		return max;
+	}
+	return num;
 }
 
 //スケーリング行列
@@ -107,42 +126,190 @@ void GameScene::Initialize() {
 	//デバッグカメラの生成
 	debugCamera_ = new DebugCamera(1280, 720);
 
+	//乱数シード生成器
+	std::random_device seed_gen;
+	//メルセンヌ・ツイスターの乱数エンジン
+	std::mt19937_64 engine(seed_gen());
+	//乱数範囲の指定
+	std::uniform_real_distribution<float>posdist(-10.0, 10.0);//座標
+	std::uniform_real_distribution<float>angledist(0, 3.14);//角度
+
 	//軸方向表示の表示を有効にする
 	AxisIndicator::GetInstance()->SetVisible(true);
 	//軸方向表示が参照するビュープロジェクションを指定する(アドレス渡し)
-	AxisIndicator::GetInstance()->SetTargetViewProjection(&debugCamera_->GetViewProjection());
+	AxisIndicator::GetInstance()->SetTargetViewProjection(&viewProjection_);
 
 	//ライン描画が参照するビュープロジェクションを指定する(アドレス渡し)
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&debugCamera_->GetViewProjection());
 
-	//ワールドトランスフォームの初期化
-	worldTransform_.Initialize();
+	//範囲forですべてのワールドトランスフォームを順に処理する
+	for (WorldTransform& worldTransform : worldTransforms_) {
+		//ワールドトランスフォームの初期化
+		worldTransform.Initialize();
+
+		//X,Y,Z 方向のスケーリングを設定
+		worldTransform.scale_ = { 1.0f,1.0f,1.0f };
+
+		// X,Y,Z軸周りの回転角を設定
+		worldTransform.rotation_ = { angledist(engine),angledist(engine),angledist(engine) };
+
+		//X,Y,Z軸周りの平行移動を設定
+		worldTransform.translation_ = { posdist(engine),posdist(engine),posdist(engine) };
+
+		//単位行列を代入
+		worldTransform.matWorld_ = CreateIdentityMatrix();
+
+		//ワールド座標に掛け算して代入
+		worldTransform.matWorld_ *= CreateMatScale(worldTransform.scale_);
+		worldTransform.matWorld_ *= CreateMatRot(worldTransform.rotation_);
+		worldTransform.matWorld_ *= CreateMatTrans(worldTransform.translation_);
+		//行列の転送
+		worldTransform.TransferMatrix();
+	}
+
+	//カメラ垂直方向視野角を設定
+	viewProjection_.fovAngleY = Angle(10.0f);
+
+	//アスペクト比を設定
+	viewProjection_.aspectRatio = 1.0f;
+
+	//ニアクリップ距離を設定
+	viewProjection_.nearZ = 52.0f;
+	//ファークリップ距離を設定
+	viewProjection_.farZ = 53.0f;
 	//ビュープロジェクションの初期化
 	viewProjection_.Initialize();
 
-	//X,Y,Z 方向のスケーリングを設定
-	worldTransform_.scale_ = { 5.0f,5.0f,5.0f };
-
-	// X,Y,Z軸周りの回転角を設定
-	worldTransform_.rotation_ = { Angle(45.0f),Angle(45.0f),Angle(0.0f)};
-	
-	//X,Y,Z軸周りの平行移動を設定
-	worldTransform_.translation_ = { 10,10,10 };
-
-	//単位行列を代入
-	worldTransform_.matWorld_=CreateIdentityMatrix();
-	
-	//ワールド座標に掛け算して代入
-	worldTransform_.matWorld_ *= CreateMatScale(worldTransform_.scale_);
-	worldTransform_.matWorld_ *= CreateMatRot(worldTransform_.rotation_);
-	worldTransform_.matWorld_ *= CreateMatTrans(worldTransform_.translation_);
-
-	//行列の転送
-	worldTransform_.TransferMatrix();
 }
 void GameScene::Update() {
 	//デバッグカメラの更新
 	debugCamera_->Update();
+
+#pragma region 視点移動処理
+	{
+		//視点の移動ベクトル
+		Vector3 move = { 0,0,0 };
+
+		//視点の移動速さ
+		const float kEyeSpeed = 0.2f;
+
+		//押した方向で移動ベクトルを変更
+		if (input_->PushKey(DIK_W)) {
+			move.z += kEyeSpeed;
+		}
+		else if (input_->PushKey(DIK_S)) {
+			move.z -= kEyeSpeed;
+		}
+		//視点移動(ベクトルの加算)
+	//	viewProjection_.eye += move;
+
+		//行列の再計算
+		viewProjection_.UpdateMatrix();
+
+		//デバッグ用表示
+		debugText_->SetPos(50, 50);
+		debugText_->Printf(
+			"eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
+	}
+#pragma endregion
+
+#pragma region 注視点移動処理
+	{
+		//注視点の移動ベクトル
+		Vector3 move = { 0,0,0 };
+
+		//注視点の移動速さ
+		const float kTargetSpeed = 0.2f;
+
+		//押した方向で移動ベクトルを変更
+		if (input_->PushKey(DIK_LEFT)) {
+			move.x += kTargetSpeed;
+		}
+		else if (input_->PushKey(DIK_RIGHT)) {
+			move.x -= kTargetSpeed;
+		}
+		//視点移動(ベクトルの加算)
+	//	viewProjection_.target += move;
+
+		//行列の再計算
+		viewProjection_.UpdateMatrix();
+
+		//デバッグ用表示
+		debugText_->SetPos(50, 70);
+		debugText_->Printf(
+			"target:(%f,%f,%f)", viewProjection_.target.x, viewProjection_.target.y, viewProjection_.target.z);
+	}
+#pragma endregion
+
+#pragma region 上方向回転処理
+	{
+		//上方向の回転速さ[ラジアン/frame]
+		const float kUpRotSpeed = 0.05f;
+
+		//押した方向で移動ベクトルを変更
+		if (input_->PushKey(DIK_SPACE)) {
+			viewAngle += kUpRotSpeed;
+			//2πを超えたら0に戻す
+			viewAngle = fmodf(viewAngle, 3.14 * 2.0f);
+		}
+
+		//上方向ベクトルを計算(半径1の円周上の座標)
+	//	viewProjection_.up = { cosf(viewAngle),sinf(viewAngle),0.0f };
+
+		//行列の再計算
+		viewProjection_.UpdateMatrix();
+
+		//デバッグ用表示
+		debugText_->SetPos(50, 90);
+		debugText_->Printf(
+			"up:(%f,%f,%f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
+	}
+#pragma endregion
+
+#pragma region Fov変更処理
+	{
+		//上キーで視野角を広げる
+		if (input_->PushKey(DIK_UP)) {
+			//viewProjection_.fovAngleY += Angle(1.0f);
+			viewProjection_.fovAngleY = Clamp(0.01f, Angle(180.0f), viewProjection_.fovAngleY);
+		}
+		//下キーで視野角を広げる
+		if (input_->PushKey(DIK_DOWN)) {
+			//viewProjection_.fovAngleY -= Angle(1.0f);
+			viewProjection_.fovAngleY = Clamp(0.01f, Angle(180.0f), viewProjection_.fovAngleY);
+		}
+
+		//行列の再計算
+		viewProjection_.UpdateMatrix();
+
+		//デバッグ用表示
+		debugText_->SetPos(50, 110);
+		debugText_->Printf(
+			"fovAngleY(Degree):(%f)", Radian(viewProjection_.fovAngleY));
+	}
+#pragma endregion
+
+#pragma region クリップ距離変更処理
+	{
+		//上下キーでニアクリップ距離を増減
+		if (input_->PushKey(DIK_UP))
+		{
+			viewProjection_.nearZ += 1.0f;
+		}
+		else if (input_->PushKey(DIK_DOWN))
+		{
+			viewProjection_.nearZ -= 1.0f;
+		}
+
+		//行列の再計算
+		viewProjection_.UpdateMatrix();
+
+		//デバッグ用表示
+		debugText_->SetPos(50, 130);
+		debugText_->Printf(
+			"nearZ:%f", viewProjection_.nearZ);
+	}
+#pragma endregion
 }
 
 void GameScene::Draw() {
@@ -175,8 +342,9 @@ void GameScene::Draw() {
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>f
 	/// 3Dモデル描画
-	model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);
-
+	for (WorldTransform& worldTransform : worldTransforms_) {
+		model_->Draw(worldTransform, viewProjection_, textureHandle_);
+	}
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion
