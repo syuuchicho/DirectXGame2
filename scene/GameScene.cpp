@@ -13,9 +13,9 @@ GameScene::~GameScene() {
 }
 
 //度数法
-float Angle(float const &n)
+float Angle(float const& n)
 {
-	return n*3.14/180;
+	return n * 3.14 / 180;
 }
 
 float Radian(float const& n)
@@ -126,27 +126,35 @@ void GameScene::Initialize() {
 	//デバッグカメラの生成
 	debugCamera_ = new DebugCamera(1280, 720);
 
+	//乱数シード生成器
+	std::random_device seed_gen;
+	//メルセンヌ・ツイスターの乱数エンジン
+	std::mt19937_64 engine(seed_gen());
+	//乱数範囲の指定
+	std::uniform_real_distribution<float>posdist(-10.0, 10.0);//座標
+	std::uniform_real_distribution<float>angledist(0, 3.14);//角度
+
 	//軸方向表示の表示を有効にする
 	AxisIndicator::GetInstance()->SetVisible(true);
 	//軸方向表示が参照するビュープロジェクションを指定する(アドレス渡し)
-	AxisIndicator::GetInstance()->SetTargetViewProjection(&debugCamera_->GetViewProjection());
+	AxisIndicator::GetInstance()->SetTargetViewProjection(&viewProjection_);
 
 	//ライン描画が参照するビュープロジェクションを指定する(アドレス渡し)
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&debugCamera_->GetViewProjection());
 
-	//ワールドトランスフォームの初期化
-	worldTransform_.Initialize();
-	//ビュープロジェクションの初期化
-	viewProjection_.Initialize();
+	//範囲forですべてのワールドトランスフォームを順に処理する
+	for (WorldTransform& worldTransform : worldTransforms_) {
+		//ワールドトランスフォームの初期化
+		worldTransform.Initialize();
 
-	//X,Y,Z 方向のスケーリングを設定
-	worldTransform_.scale_ = { 5.0f,5.0f,5.0f };
+		//X,Y,Z 方向のスケーリングを設定
+		worldTransform.scale_ = { 1.0f,1.0f,1.0f };
 
-	// X,Y,Z軸周りの回転角を設定
-	worldTransform_.rotation_ = { Angle(45.0f),Angle(45.0f),Angle(0.0f)};
-	
-	//X,Y,Z軸周りの平行移動を設定
-	worldTransform_.translation_ = { 10,10,10 };
+		// X,Y,Z軸周りの回転角を設定
+		worldTransform.rotation_ = { angledist(engine),angledist(engine),angledist(engine) };
+
+		//X,Y,Z軸周りの平行移動を設定
+		worldTransform.translation_ = { posdist(engine),posdist(engine),posdist(engine) };
 
 		//単位行列を代入
 		worldTransform.matWorld_ = CreateIdentityMatrix();
@@ -334,8 +342,9 @@ void GameScene::Draw() {
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>f
 	/// 3Dモデル描画
-	model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);
-
+	for (WorldTransform& worldTransform : worldTransforms_) {
+		model_->Draw(worldTransform, viewProjection_, textureHandle_);
+	}
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion
