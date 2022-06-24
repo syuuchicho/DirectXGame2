@@ -126,10 +126,25 @@ void Player::Update() {
 	}
 
 	worldTransform_.translation_ += move;
+	//単位行列
 	worldTransform_.matWorld_ = CreateIdentityMatrix();
+	//スケーリング行列
 	worldTransform_.matWorld_ *= CreateMatScale(worldTransform_.scale_);
+	//回転行列
 	worldTransform_.matWorld_ *= CreateMatRot(worldTransform_.rotation_);
+	//平行移動
 	worldTransform_.matWorld_ *= CreateMatTrans(worldTransform_.translation_);
+
+	if (input_->PushKey(DIK_Z))
+	{
+		//Y軸まわりの角度を増加
+		worldTransform_.rotation_.y += 0.03f;
+	}
+	else if (input_->PushKey(DIK_C))
+	{
+		//Y軸まわりの角度を減少
+		worldTransform_.rotation_.y -= 0.03f;
+	}
 
 	//移動限界処理
 	const float kMoveLimitX = 20;
