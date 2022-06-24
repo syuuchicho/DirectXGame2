@@ -1,4 +1,5 @@
-﻿#include "GameScene.h"
+﻿
+#include "GameScene.h"
 #include "TextureManager.h"
 #include <cassert>
 #include"AxisIndicator.h"
@@ -10,6 +11,8 @@ GameScene::GameScene() {}
 GameScene::~GameScene() {
 	delete model_;
 	delete debugCamera_;
+	//自キャラの解放
+	delete player_;
 }
 
 //度数法
@@ -37,78 +40,84 @@ float Clamp(float const& min, float const& max, float num)
 	return num;
 }
 
-//スケーリング行列
-Matrix4 CreateMatScale(Vector3 scale) {
-	Matrix4 matScale;
-	matScale.m[0][0] = scale.x;
-	matScale.m[1][1] = scale.y;
-	matScale.m[2][2] = scale.z;
-	matScale.m[3][3] = 1.0f;
+////スケーリング行列
+//Matrix4 CreateMatScale(Vector3 scale) {
+//	Matrix4 matScale;
+//	matScale.m[0][0] = scale.x;
+//	matScale.m[1][1] = scale.y;
+//	matScale.m[2][2] = scale.z;
+//	matScale.m[3][3] = 1.0f;
+//
+//	return matScale;
+//}
+//
+////回転行列
+//Matrix4 CreateMatRot(Vector3 rotation) {
+//	//合成用回転行列を宣言
+//	Matrix4 matRot;
+//	//各軸用回転行列を宣言
+//	Matrix4 matRotX, matRotY, matRotZ;
+//
+//	matRotZ.m[0][0] = cos(rotation.z);
+//	matRotZ.m[0][1] = sin(rotation.z);
+//	matRotZ.m[1][0] = -sin(rotation.z);
+//	matRotZ.m[1][1] = cos(rotation.z);
+//	matRotZ.m[2][2] = 1;
+//	matRotZ.m[3][3] = 1;
+//
+//	matRotX.m[0][0] = 1;
+//	matRotX.m[1][1] = cos(rotation.x);
+//	matRotX.m[1][2] = sin(rotation.x);
+//	matRotX.m[2][1] = -sin(rotation.x);
+//	matRotX.m[2][2] = cos(rotation.x);
+//	matRotX.m[3][3] = 1;
+//
+//	matRotY.m[0][0] = cos(rotation.y);
+//	matRotY.m[0][2] = -sin(rotation.y);
+//	matRotY.m[1][1] = 1;
+//	matRotY.m[2][0] = sin(rotation.y);
+//	matRotY.m[2][2] = cos(rotation.y);
+//	matRotY.m[3][3] = 1;
+//
+//	//各軸の回転行列を合成
+//	matRot = matRotZ;
+//	matRot *= matRotX;
+//	matRot *= matRotY;
+//
+//	return matRot;
+//}
+////平行移動
+//Matrix4 CreateMatTrans(Vector3 translation) {
+//	//平行移動を宣言
+//	Matrix4 matTrans = MathUtility::Matrix4Identity();
+//
+//	matTrans.m[0][0] = 1;
+//	matTrans.m[1][1] = 1;
+//	matTrans.m[2][2] = 1;
+//	matTrans.m[3][0] = translation.x;
+//	matTrans.m[3][1] = translation.y;
+//	matTrans.m[3][2] = translation.z;
+//	matTrans.m[3][3] = 1;
+//
+//	return matTrans;
+//}
+////単位行列
+//Matrix4 CreateIdentityMatrix()
+//{
+//	Matrix4 Identity;
+//	//単位行列を代入
+//	Identity.m[0][0] = 1.0f;
+//	Identity.m[1][1] = 1.0f;
+//	Identity.m[2][2] = 1.0f;
+//	Identity.m[3][3] = 1.0f;
+//	return Identity;
+//}
 
-	return matScale;
-}
+#pragma region 旋回
 
-//回転行列
-Matrix4 CreateMatRot(Vector3 rotation) {
-	//合成用回転行列を宣言
-	Matrix4 matRot;
-	//各軸用回転行列を宣言
-	Matrix4 matRotX, matRotY, matRotZ;
 
-	matRotZ.m[0][0] = cos(rotation.z);
-	matRotZ.m[0][1] = sin(rotation.z);
-	matRotZ.m[1][0] = -sin(rotation.z);
-	matRotZ.m[1][1] = cos(rotation.z);
-	matRotZ.m[2][2] = 1;
-	matRotZ.m[3][3] = 1;
 
-	matRotX.m[0][0] = 1;
-	matRotX.m[1][1] = cos(rotation.x);
-	matRotX.m[1][2] = sin(rotation.x);
-	matRotX.m[2][1] = -sin(rotation.x);
-	matRotX.m[2][2] = cos(rotation.x);
-	matRotX.m[3][3] = 1;
-
-	matRotY.m[0][0] = cos(rotation.y);
-	matRotY.m[0][2] = -sin(rotation.y);
-	matRotY.m[1][1] = 1;
-	matRotY.m[2][0] = sin(rotation.y);
-	matRotY.m[2][2] = cos(rotation.y);
-	matRotY.m[3][3] = 1;
-
-	//各軸の回転行列を合成
-	matRot = matRotZ;
-	matRot *= matRotX;
-	matRot *= matRotY;
-
-	return matRot;
-}
-//平行移動
-Matrix4 CreateMatTrans(Vector3 translation) {
-	//平行移動を宣言
-	Matrix4 matTrans = MathUtility::Matrix4Identity();
-
-	matTrans.m[0][0] = 1;
-	matTrans.m[1][1] = 1;
-	matTrans.m[2][2] = 1;
-	matTrans.m[3][0] = translation.x;
-	matTrans.m[3][1] = translation.y;
-	matTrans.m[3][2] = translation.z;
-	matTrans.m[3][3] = 1;
-
-	return matTrans;
-}
-//単位行列
-Matrix4 CreateIdentityMatrix()
-{
-	Matrix4 Identity;
-	//単位行列を代入
-	Identity.m[0][0] = 1.0f;
-	Identity.m[1][1] = 1.0f;
-	Identity.m[2][2] = 1.0f;
-	Identity.m[3][3] = 1.0f;
-	return Identity;
-}
+#pragma endregion
 
 void GameScene::Initialize() {
 
@@ -142,173 +151,154 @@ void GameScene::Initialize() {
 	//ライン描画が参照するビュープロジェクションを指定する(アドレス渡し)
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&debugCamera_->GetViewProjection());
 
-	//範囲forですべてのワールドトランスフォームを順に処理する
-	for (WorldTransform& worldTransform : worldTransforms_) {
-		//ワールドトランスフォームの初期化
-		worldTransform.Initialize();
+	////カメラ垂直方向視野角を設定
+	//viewProjection_.fovAngleY = Angle(10.0f);
 
-		//X,Y,Z 方向のスケーリングを設定
-		worldTransform.scale_ = { 1.0f,1.0f,1.0f };
+	////アスペクト比を設定
+	//viewProjection_.aspectRatio = 1.0f;
 
-		// X,Y,Z軸周りの回転角を設定
-		worldTransform.rotation_ = { angledist(engine),angledist(engine),angledist(engine) };
-
-		//X,Y,Z軸周りの平行移動を設定
-		worldTransform.translation_ = { posdist(engine),posdist(engine),posdist(engine) };
-
-		//単位行列を代入
-		worldTransform.matWorld_ = CreateIdentityMatrix();
-
-		//ワールド座標に掛け算して代入
-		worldTransform.matWorld_ *= CreateMatScale(worldTransform.scale_);
-		worldTransform.matWorld_ *= CreateMatRot(worldTransform.rotation_);
-		worldTransform.matWorld_ *= CreateMatTrans(worldTransform.translation_);
-		//行列の転送
-		worldTransform.TransferMatrix();
-	}
-
-	//カメラ垂直方向視野角を設定
-	viewProjection_.fovAngleY = Angle(10.0f);
-
-	//アスペクト比を設定
-	viewProjection_.aspectRatio = 1.0f;
-
-	//ニアクリップ距離を設定
-	viewProjection_.nearZ = 52.0f;
-	//ファークリップ距離を設定
-	viewProjection_.farZ = 53.0f;
+	////ニアクリップ距離を設定
+	//viewProjection_.nearZ = 52.0f;
+	////ファークリップ距離を設定
+	//viewProjection_.farZ = 53.0f;
 	//ビュープロジェクションの初期化
 	viewProjection_.Initialize();
 
+	//自キャラの生成
+	player_ = new Player();
+	//自キャラの初期化
+	player_->Initialize(model_,textureHandle_);
 }
 void GameScene::Update() {
 	//デバッグカメラの更新
-	debugCamera_->Update();
+	//debugCamera_->Update();
+	//自キャラの更新
+	player_->Update();
 
 #pragma region 視点移動処理
 	{
-		//視点の移動ベクトル
-		Vector3 move = { 0,0,0 };
+	//	//視点の移動ベクトル
+	//	Vector3 move = { 0,0,0 };
 
-		//視点の移動速さ
-		const float kEyeSpeed = 0.2f;
+	//	//視点の移動速さ
+	//	const float kEyeSpeed = 0.2f;
 
-		//押した方向で移動ベクトルを変更
-		if (input_->PushKey(DIK_W)) {
-			move.z += kEyeSpeed;
-		}
-		else if (input_->PushKey(DIK_S)) {
-			move.z -= kEyeSpeed;
-		}
-		//視点移動(ベクトルの加算)
-	//	viewProjection_.eye += move;
+	//	//押した方向で移動ベクトルを変更
+	//	if (input_->PushKey(DIK_W)) {
+	//		move.z += kEyeSpeed;
+	//	}
+	//	else if (input_->PushKey(DIK_S)) {
+	//		move.z -= kEyeSpeed;
+	//	}
+	//	//視点移動(ベクトルの加算)
+	////	viewProjection_.eye += move;
 
-		//行列の再計算
-		viewProjection_.UpdateMatrix();
+	//	//行列の再計算
+	//	viewProjection_.UpdateMatrix();
 
-		//デバッグ用表示
-		debugText_->SetPos(50, 50);
-		debugText_->Printf(
-			"eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
+	//	//デバッグ用表示
+	//	debugText_->SetPos(50, 50);
+	//	debugText_->Printf(
+	//		"eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
 	}
 #pragma endregion
 
 #pragma region 注視点移動処理
 	{
-		//注視点の移動ベクトル
-		Vector3 move = { 0,0,0 };
+	//	//注視点の移動ベクトル
+	//	Vector3 move = { 0,0,0 };
 
-		//注視点の移動速さ
-		const float kTargetSpeed = 0.2f;
+	//	//注視点の移動速さ
+	//	const float kTargetSpeed = 0.2f;
 
-		//押した方向で移動ベクトルを変更
-		if (input_->PushKey(DIK_LEFT)) {
-			move.x += kTargetSpeed;
-		}
-		else if (input_->PushKey(DIK_RIGHT)) {
-			move.x -= kTargetSpeed;
-		}
-		//視点移動(ベクトルの加算)
-	//	viewProjection_.target += move;
+	//	//押した方向で移動ベクトルを変更
+	//	if (input_->PushKey(DIK_LEFT)) {
+	//		move.x += kTargetSpeed;
+	//	}
+	//	else if (input_->PushKey(DIK_RIGHT)) {
+	//		move.x -= kTargetSpeed;
+	//	}
+	//	//視点移動(ベクトルの加算)
+	////	viewProjection_.target += move;
 
-		//行列の再計算
-		viewProjection_.UpdateMatrix();
+	//	//行列の再計算
+	//	viewProjection_.UpdateMatrix();
 
-		//デバッグ用表示
-		debugText_->SetPos(50, 70);
-		debugText_->Printf(
-			"target:(%f,%f,%f)", viewProjection_.target.x, viewProjection_.target.y, viewProjection_.target.z);
+	//	//デバッグ用表示
+	//	debugText_->SetPos(50, 70);
+	//	debugText_->Printf(
+	//		"target:(%f,%f,%f)", viewProjection_.target.x, viewProjection_.target.y, viewProjection_.target.z);
 	}
 #pragma endregion
 
 #pragma region 上方向回転処理
 	{
-		//上方向の回転速さ[ラジアン/frame]
-		const float kUpRotSpeed = 0.05f;
+	//	//上方向の回転速さ[ラジアン/frame]
+	//	const float kUpRotSpeed = 0.05f;
 
-		//押した方向で移動ベクトルを変更
-		if (input_->PushKey(DIK_SPACE)) {
-			viewAngle += kUpRotSpeed;
-			//2πを超えたら0に戻す
-			viewAngle = fmodf(viewAngle, 3.14 * 2.0f);
-		}
+	//	//押した方向で移動ベクトルを変更
+	//	if (input_->PushKey(DIK_SPACE)) {
+	//		viewAngle += kUpRotSpeed;
+	//		//2πを超えたら0に戻す
+	//		viewAngle = fmodf(viewAngle, 3.14 * 2.0f);
+	//	}
 
-		//上方向ベクトルを計算(半径1の円周上の座標)
-	//	viewProjection_.up = { cosf(viewAngle),sinf(viewAngle),0.0f };
+	//	//上方向ベクトルを計算(半径1の円周上の座標)
+	////	viewProjection_.up = { cosf(viewAngle),sinf(viewAngle),0.0f };
 
-		//行列の再計算
-		viewProjection_.UpdateMatrix();
+	//	//行列の再計算
+	//	viewProjection_.UpdateMatrix();
 
-		//デバッグ用表示
-		debugText_->SetPos(50, 90);
-		debugText_->Printf(
-			"up:(%f,%f,%f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
+	//	//デバッグ用表示
+	//	debugText_->SetPos(50, 90);
+	//	debugText_->Printf(
+	//		"up:(%f,%f,%f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
 	}
 #pragma endregion
 
 #pragma region Fov変更処理
 	{
-		//上キーで視野角を広げる
-		if (input_->PushKey(DIK_UP)) {
-			//viewProjection_.fovAngleY += Angle(1.0f);
-			viewProjection_.fovAngleY = Clamp(0.01f, Angle(180.0f), viewProjection_.fovAngleY);
-		}
-		//下キーで視野角を広げる
-		if (input_->PushKey(DIK_DOWN)) {
-			//viewProjection_.fovAngleY -= Angle(1.0f);
-			viewProjection_.fovAngleY = Clamp(0.01f, Angle(180.0f), viewProjection_.fovAngleY);
-		}
+		////上キーで視野角を広げる
+		//if (input_->PushKey(DIK_UP)) {
+		//	//viewProjection_.fovAngleY += Angle(1.0f);
+		//	viewProjection_.fovAngleY = Clamp(0.01f, Angle(180.0f), viewProjection_.fovAngleY);
+		//}
+		////下キーで視野角を広げる
+		//if (input_->PushKey(DIK_DOWN)) {
+		//	//viewProjection_.fovAngleY -= Angle(1.0f);
+		//	viewProjection_.fovAngleY = Clamp(0.01f, Angle(180.0f), viewProjection_.fovAngleY);
+		//}
 
-		//行列の再計算
-		viewProjection_.UpdateMatrix();
+		////行列の再計算
+		//viewProjection_.UpdateMatrix();
 
-		//デバッグ用表示
-		debugText_->SetPos(50, 110);
-		debugText_->Printf(
-			"fovAngleY(Degree):(%f)", Radian(viewProjection_.fovAngleY));
+		////デバッグ用表示
+		//debugText_->SetPos(50, 110);
+		//debugText_->Printf(
+		//	"fovAngleY(Degree):(%f)", Radian(viewProjection_.fovAngleY));
 	}
 #pragma endregion
 
 #pragma region クリップ距離変更処理
-	{
-		//上下キーでニアクリップ距離を増減
-		if (input_->PushKey(DIK_UP))
-		{
-			viewProjection_.nearZ += 1.0f;
-		}
-		else if (input_->PushKey(DIK_DOWN))
-		{
-			viewProjection_.nearZ -= 1.0f;
-		}
+	//{
+	//	//上下キーでニアクリップ距離を増減
+	//	if (input_->PushKey(DIK_UP))
+	//	{
+	//		viewProjection_.nearZ += 1.0f;
+	//	}
+	//	else if (input_->PushKey(DIK_DOWN))
+	//	{
+	//		viewProjection_.nearZ -= 1.0f;
+	//	}
 
-		//行列の再計算
-		viewProjection_.UpdateMatrix();
+	//	//行列の再計算
+	//	viewProjection_.UpdateMatrix();
 
-		//デバッグ用表示
-		debugText_->SetPos(50, 130);
-		debugText_->Printf(
-			"nearZ:%f", viewProjection_.nearZ);
-	}
+	//	//デバッグ用表示
+	//	debugText_->SetPos(50, 130);
+	//	debugText_->Printf(
+	//		"nearZ:%f", viewProjection_.nearZ);
+	//}
 #pragma endregion
 }
 
@@ -340,15 +330,14 @@ void GameScene::Draw() {
 
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
-	/// </summary>f
-	/// 3Dモデル描画
-	for (WorldTransform& worldTransform : worldTransforms_) {
-		model_->Draw(worldTransform, viewProjection_, textureHandle_);
-	}
+	/// </summary>
+	//自キャラの描画
+	player_->Draw(viewProjection_);
+	
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion
-
+	
 #pragma region 前景スプライト描画
 	// 前景スプライト描画前処理
 	Sprite::PreDraw(commandList);
