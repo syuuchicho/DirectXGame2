@@ -1,9 +1,7 @@
 #pragma once
-#include"Model.h"
-#include"WorldTransform.h"
+#include"PlayerBullet.h"
 #include "Input.h"
 #include "DebugText.h"
-
 
 /// <summary>
 /// 自キャラ
@@ -18,7 +16,7 @@ public:	//メンバー関数
 /// <param name="model">モデル</param>
 /// <param name="textrueHandle">テクスチャハンドル</param>
 	void Initialize(Model* model, uint32_t textrueHandle);
-	
+
 /// <summary>
 /// 更新
 /// </summary>
@@ -29,8 +27,18 @@ public:	//メンバー関数
 /// </summary>
 /// <param name="viewProjection">ビュープロジェクション(参照渡し)</param>
 	void Draw(ViewProjection &viewProjection);
-private:	//メンバー変数
+	
+	/// <summary>
+	/// 旋回
+	/// </summary>
+	void Rotate(Input* input_, float& y);
 
+/// <summary>
+/// 攻撃
+/// </summary>
+	void Attack();
+
+private:	//メンバー変数
 	//ワールド変換データ
 	WorldTransform worldTransform_;
 	//ビュープロジェクション
@@ -43,4 +51,6 @@ private:	//メンバー変数
 	Input* input_ = nullptr;
 	//デバッグテキスト
 	DebugText* debugText_ = nullptr;
+	//弾
+	PlayerBullet* bullet_ = nullptr;
 };

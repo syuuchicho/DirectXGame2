@@ -19,7 +19,7 @@ class GameScene {
 	/// コンストクラタ
 	/// </summary>
 	GameScene();
-
+	
 	/// <summary>
 	/// デストラクタ
 	/// </summary>
