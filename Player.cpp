@@ -1,6 +1,6 @@
 #include"Player.h"
 #include <cassert>
-//05.02
+//03_03
 
 //ù‰ñ
 void Player::Rotate(Input *input_,float &y)
@@ -23,32 +23,13 @@ void Player::Attack()
 	if (input_->TriggerKey(DIK_SPACE))
 	{
 		//’e‚ğ¶¬‚µA‰Šú‰»
-		PlayerBullet* newBullet = new PlayerBullet();
+		std::unique_ptr<PlayerBullet>newBullet = std::make_unique<PlayerBullet>();
 		newBullet->Initialize(model_,worldTransform_.translation_);
 
 		//’e‚ğ“o˜^‚·‚é
-		bullet_ = newBullet;
+		bullets_.push_back(std::move(newBullet));
 	}
 }
-
-
-//void Move(Input* input_, Vector3 move, const float &moveSpeed)
-//{
-//
-//	if (input_->PushKey(DIK_RIGHT)) {
-//		move.x += moveSpeed;
-//	}
-//	else if (input_->PushKey(DIK_LEFT)) {
-//		move.x -= moveSpeed;
-//	}
-//	if (input_->PushKey(DIK_UP)) {
-//		move.y += moveSpeed;
-//	}
-//	if (input_->PushKey(DIK_DOWN)) {
-//		move.y -= moveSpeed;
-//	}
-//}
-
 
 void Player::Initialize(Model* model, uint32_t textureHandle) {
 	//NULLƒ|ƒCƒ“ƒ^ƒ`ƒFƒbƒN
@@ -117,11 +98,11 @@ void Player::Update() {
 	debugText_->Printf("PosY:%f", worldTransform_.translation_.y);
 	//UŒ‚
 	Attack();
-
 	//’eXV
-	if (bullet_){
-		bullet_->Update();
+	for(std::unique_ptr<PlayerBullet>& bullet:bullets_){
+		bullet->Update();
 	}
+
 }
 
 void Player::Draw(ViewProjection& viewprojection) {
@@ -129,8 +110,8 @@ void Player::Draw(ViewProjection& viewprojection) {
 	model_->Draw(worldTransform_, viewprojection, textureHandle_);
 
 	//’e•`‰æ
-	if (bullet_){
-		bullet_->Draw(viewprojection);
+	for (std::unique_ptr<PlayerBullet>& bullet : bullets_) {
+		bullet->Draw(viewprojection);
 	}
 }
 
