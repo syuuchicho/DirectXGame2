@@ -1,6 +1,13 @@
 #include"Player.h"
 #include <cassert>
-//03_03
+//03_04
+Vector3 CrossV3M4(Vector3& v, const Matrix4& m)
+{
+	v.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0];
+	v.y = v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1];
+	v.z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2];
+	return v;
+}
 
 //旋回
 void Player::Rotate(Input *input_,float &y)
@@ -8,12 +15,12 @@ void Player::Rotate(Input *input_,float &y)
 	if (input_->PushKey(DIK_Z))
 	{
 		//Y軸まわりの角度を増加
-		y += 0.03f;
+		y += 0.01f;
 	}
 	else if (input_->PushKey(DIK_C))
 	{
 		//Y軸まわりの角度を減少
-		y -= 0.03f;
+		y -= 0.01f;
 	}
 }
 
@@ -22,9 +29,17 @@ void Player::Attack()
 {
 	if (input_->TriggerKey(DIK_SPACE))
 	{
+		//弾の速度
+		const float kBulletSpeed = 1.0f;
+		Vector3 velocity(0, 0, kBulletSpeed);
+
+		//速度ベクトルを自機の向きに合わせて回転させる
+		velocity = CrossV3M4(velocity, worldTransform_.CreateMatRot(worldTransform_.rotation_));
+		
+
 		//弾を生成し、初期化
 		std::unique_ptr<PlayerBullet>newBullet = std::make_unique<PlayerBullet>();
-		newBullet->Initialize(model_,worldTransform_.translation_);
+		newBullet->Initialize(model_,worldTransform_.translation_,velocity);
 
 		//弾を登録する
 		bullets_.push_back(std::move(newBullet));
@@ -48,6 +63,11 @@ void Player::Initialize(Model* model, uint32_t textureHandle) {
 
 ///
 void Player::Update() {
+
+	//デスフラグの立った弾を削除
+	bullets_.remove_if([](std::unique_ptr<PlayerBullet>& bullet) {
+		return bullet->IsDead();
+	});
 
 	//キャラクターの移動ベクトル
 	Vector3 move = { 0,0,0 };
@@ -102,7 +122,6 @@ void Player::Update() {
 	for(std::unique_ptr<PlayerBullet>& bullet:bullets_){
 		bullet->Update();
 	}
-
 }
 
 void Player::Draw(ViewProjection& viewprojection) {
