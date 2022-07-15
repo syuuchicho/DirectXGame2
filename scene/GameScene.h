@@ -7,6 +7,7 @@
 #include "ViewProjection.h"
 #include "DebugCamera.h"
 #include "Player.h"
+#include"Enemy.h"
 
 
 /// <summary>
@@ -63,6 +64,9 @@ class GameScene {
 
 	//キャラ
 	Player* player_ = nullptr;
+
+	//敵
+	Enemy* enemy_ = nullptr;
 
 	//デバッグカメラ
 

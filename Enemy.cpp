@@ -1,27 +1,30 @@
-#include"PlayerBullet.h"
+#include"Enemy.h"
 #include <cassert>
+//03_05p7
 
-void PlayerBullet::Initialize(Model* model, const Vector3& position,const Vector3& velocity)
-{
+
+void Enemy::Initialize(Model* model, uint32_t textureHandle){
 	//NULLポインタチェック
 	assert(model);
 
 	model_ = model;
-	//テクスチャ読み込み
-	textureHandle_ = TextureManager::Load("black.png");
 
+	//テクスチャ読み込み
+	textureHandle_ = TextureManager::Load("EnemyP.png");
+	
 	//ワールド変換の初期化
 	worldTransform_.Initialize();
 
-	//引数で受け取った初期座標をセット
-	worldTransform_.translation_ = position;
-
-	//引数で受け取った速度をメンバ変数に代入
-	velocity_ =velocity;
+	//キャラクターの移動ベクトル
+	Vector3 move = { 0,5,0 };
+	
+	//初期座標をセット
+	worldTransform_.translation_ = move;
 }
 
-void PlayerBullet::Update()
+void Enemy::Update()
 {
+	float speed = 0.3f;
 	//単位行列
 	worldTransform_.matWorld_ = worldTransform_.CreateIdentityMatrix();
 	//スケーリング行列
@@ -32,18 +35,15 @@ void PlayerBullet::Update()
 	worldTransform_.matWorld_ *= worldTransform_.CreateMatTrans(worldTransform_.translation_);
 
 	//座標を移動させる(1フレーム分の移動量を足しこむ)
-	worldTransform_.translation_ += velocity_;
+	worldTransform_.translation_.z-= speed;
 
 	//行列の転送
 	worldTransform_.TransferMatrix();
 
-	//時間経過でデス
-	if (--deathTimer_ <= 0) {
-		isDead_ = true;
-	}
+
 }
 
-void PlayerBullet::Draw(const ViewProjection& viewProjection)
+void Enemy::Draw(const ViewProjection& viewProjection)
 {
 	//モデルの描画
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
