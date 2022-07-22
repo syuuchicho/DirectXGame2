@@ -1,6 +1,6 @@
 #include"Enemy.h"
 #include <cassert>
-//03_05p7
+
 void Approach(Vector3& appSpeed, WorldTransform& worldTransform_, Enemy::Phase& phase_, float z)
 {
 
@@ -24,6 +24,9 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle) {
 	assert(model);
 
 	model_ = model;
+	
+	//シングルトンインスタンスを取得する
+	input_ = Input::GetInstance();
 
 	//テクスチャ読み込み
 	textureHandle_ = TextureManager::Load("EnemyP.png");
@@ -32,16 +35,23 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle) {
 	worldTransform_.Initialize();
 
 	//キャラクターの移動ベクトル
-	Vector3 move = { 0,5,100 };
+	Vector3 move = { 30,5,100 };
 
 	//初期座標をセット
 	worldTransform_.translation_ = move;
+
+	//接近フェーズ初期化
+	AppPhaInitialize();
 }
+
+
+
 
 void Enemy::Update()
 {
 	Vector3 appSpeed = { 0,0,-0.3f };
 	Vector3 leaveSpeed = { 0,0,+0.3f };
+	//行動パターン遷移
 	switch (phase_) {
 	case Phase::Approach:
 	default:
@@ -51,6 +61,10 @@ void Enemy::Update()
 		Leave(leaveSpeed, worldTransform_);
 		break;
 	}
+	//デスグラフの立った弾を削除
+	bullets_.remove_if([](std::unique_ptr<EnemyBullet>& bullet){
+		return bullet->IsDead();
+	});
 
 	//単位行列
 	worldTransform_.matWorld_ = worldTransform_.CreateIdentityMatrix();
@@ -63,10 +77,46 @@ void Enemy::Update()
 
 	//行列の転送
 	worldTransform_.TransferMatrix();
+
+	//接近フェーズ初期化
+	AppPhaInitialize();
+	
+	//弾更新
+	for (std::unique_ptr<EnemyBullet>& bullet_ : bullets_) {
+		bullet_->Update();
+	}
+}
+
+void Enemy::Fire()
+{
+		//弾を生成し、初期化
+		std::unique_ptr<EnemyBullet>newBullet=std::make_unique<EnemyBullet>();
+		newBullet->Initialize(model_, worldTransform_.translation_);
+
+		//弾を登録する
+		bullets_.push_back(std::move (newBullet));
+		
+}
+
+void Enemy::AppPhaInitialize()
+{
+	//発射タイマーカウントダウン
+	shootTimer--;
+	//指定の時間に達した
+	if (shootTimer <= 0){
+		//弾を発射
+		Fire();
+		//発射タイマーを初期化
+		shootTimer = kFireInterval;
+	}
 }
 
 void Enemy::Draw(const ViewProjection& viewProjection)
 {
 	//モデルの描画
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+	//弾描画
+	for (std::unique_ptr<EnemyBullet>& bullet_ : bullets_) {
+		bullet_->Draw(viewProjection);
+	}
 }

@@ -1,6 +1,6 @@
 #include"Player.h"
 #include <cassert>
-//03_05p7
+
 Vector3 CrossV3M4(Vector3& v, const Matrix4& m)
 {
 	v.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0];
