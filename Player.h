@@ -45,6 +45,9 @@ public:	//メンバー関数
 	/// </summary>
 	std::list<std::unique_ptr<PlayerBullet>>bullets_;
 
+	//ワールド座標を取得
+	Vector3 GetWorldPosition();
+
 private:	//メンバー変数
 	//ワールド変換データ
 	WorldTransform worldTransform_;

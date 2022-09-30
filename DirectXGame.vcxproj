@@ -183,6 +183,13 @@
   <ItemGroup>
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\black.png" />
+    <Image Include="Resources\enemyBulletP.png" />
+    <Image Include="Resources\EnemyP.png" />
+    <Image Include="Resources\mario.jpg" />
+    <Image Include="Resources\white1x1.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

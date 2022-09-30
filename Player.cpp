@@ -46,6 +46,17 @@ void Player::Attack()
 	}
 }
 
+Vector3 Player::GetWorldPosition() {
+	//ワールド座標を入れる変数
+	Vector3 worldPos;
+	//ワールド行列の平行移動成分を取得
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
+	
+	return worldPos;
+}
+
 void Player::Initialize(Model* model, uint32_t textureHandle) {
 	//NULLポインタチェック
 	assert(model);
@@ -112,10 +123,10 @@ void Player::Update() {
 	//行列の転送
 	worldTransform_.TransferMatrix();
 
-	debugText_->SetPos(50, 50);
+	/*debugText_->SetPos(50, 50);
 	debugText_->Printf("PosX:%f", worldTransform_.translation_.x);
 	debugText_->SetPos(50, 70);
-	debugText_->Printf("PosY:%f", worldTransform_.translation_.y);
+	debugText_->Printf("PosY:%f", worldTransform_.translation_.y);*/
 	//攻撃
 	Attack();
 	//弾更新
@@ -133,4 +144,3 @@ void Player::Draw(ViewProjection& viewprojection) {
 		bullet->Draw(viewprojection);
 	}
 }
-

@@ -1,7 +1,7 @@
 #include"EnemyBullet.h"
 #include <cassert>
-//03_07p4->//03_02p10
-void EnemyBullet::Initialize(Model* model, const Vector3& position)
+
+void EnemyBullet::Initialize(Model* model, const Vector3& position, const Vector3& velocity)
 {
 	//nullポインタチェック
 	assert(model);
@@ -13,16 +13,14 @@ void EnemyBullet::Initialize(Model* model, const Vector3& position)
 	//ワールド変換の初期化
 	worldTransform_.Initialize();
 	//引数で受け取った初期座標をセット
-	worldTransform_.translation_=position;
+	worldTransform_.translation_ = position;
+
+	//引数で受け取った速度をメンバ変数に代入
+	velocity_ = velocity;
 }
 
 void EnemyBullet::Update()
 {
-	//弾の速度
-	const float kBulletSpeed = -1.0f;
-	Vector3 velocity(0, 0, kBulletSpeed);
-	worldTransform_.translation_ += velocity;
-
 	//単位行列
 	worldTransform_.matWorld_ = worldTransform_.CreateIdentityMatrix();
 	//スケーリング行列
@@ -33,11 +31,14 @@ void EnemyBullet::Update()
 	worldTransform_.matWorld_ *= worldTransform_.CreateMatTrans(worldTransform_.translation_);
 	//ワールド行列を転送
 	worldTransform_.TransferMatrix();
+
+	//座標を移動させる(1フレーム分の移動量を足しこむ)
+	worldTransform_.translation_ += velocity_;
 	//時間経過でデス
 	if (--deathTimer_ <= 0) {
 		isDead_ = true;
 	}
-
+	
 }
 
 void EnemyBullet::Draw(const ViewProjection& viewProjection)

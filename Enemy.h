@@ -1,9 +1,13 @@
+
 #pragma once
 #include"Model.h"
 #include"EnemyBullet.h"
 #include<Input.h>
 #include<memory>
 #include<list>
+
+
+class Player;
 
 /// <summary>
 /// 敵
@@ -22,12 +26,12 @@ public:
 	/// 初期化
 	/// </summary>
 	void Initialize(Model* model, uint32_t textureHandle);
-	
+
 	/// <summary>
 	/// 更新
 	/// </summary>
 	void Update();
-	
+
 	/// <summary>
 	/// 描画
 	/// </summary>
@@ -38,17 +42,26 @@ public:
 	/// </summary>
 	void Fire();
 
+	void SetPlayer(Player* player) { player_ = player; }
 
-	void AppPhaInitialize();
+	void ApproachInitialize();
+
+	void ApproachMove();
+
+	void LeaveMove();
+
+	Vector3 GetWorldPosition();
 	//発射間隔
 	static const int kFireInterval = 60;
 private:
+	//自キャラ
+	Player* player_ = nullptr;
 	//ワールドトランスフォーム
 	WorldTransform worldTransform_;
 	//モデル
 	Model* model_ = nullptr;
 	//テクスチャハンドル
-	uint32_t textureHandle_=0u;
+	uint32_t textureHandle_ = 0u;
 	//フェーズ
 	Phase phase_ = Phase::Approach;
 	//弾
@@ -56,5 +69,5 @@ private:
 	//入力処理
 	Input* input_ = nullptr;
 	//発射タイマー
-	int32_t shootTimer = 0;
+	int32_t fireTimer = 0;
 };

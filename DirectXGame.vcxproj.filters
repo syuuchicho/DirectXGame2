@@ -214,4 +214,21 @@
       <Filter>シェーダー ファイル</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\black.png">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="Resources\EnemyP.png">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="Resources\enemyBulletP.png">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="Resources\mario.jpg">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+    <Image Include="Resources\white1x1.png">
+      <Filter>リソース ファイル</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

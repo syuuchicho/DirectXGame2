@@ -12,6 +12,7 @@ GameScene::~GameScene() {
 	delete debugCamera_;
 	//自キャラの解放
 	delete player_;
+	delete enemy_;
 }
 
 //度数法
@@ -170,8 +171,11 @@ void GameScene::Initialize() {
 
 	//敵の生成
 	enemy_ = new Enemy();
+	//敵キャラに自キャラのアドレスを渡す
+	enemy_->SetPlayer(player_);
 	//敵の初期化
 	enemy_->Initialize(model_,textureHandle_);
+
 }
 void GameScene::Update() {
 	//デバッグカメラの更新
@@ -356,7 +360,7 @@ void GameScene::Draw() {
 
 	// デバッグテキストの描画
 	debugText_->DrawAll(commandList);
-	//
+	
 	// スプライト描画後処理
 	Sprite::PostDraw();
 
