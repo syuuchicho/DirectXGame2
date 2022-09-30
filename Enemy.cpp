@@ -137,6 +137,11 @@ void Enemy::Update()
 	worldTransform_.TransferMatrix();
 }
 
+void Enemy::OnCollision()
+{
+	worldTransform_.translation_.z += 5;
+}
+
 void Enemy::Fire()
 {
 	assert(player_);

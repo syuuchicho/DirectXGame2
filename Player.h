@@ -39,14 +39,18 @@ public:	//メンバー関数
 /// 攻撃
 /// </summary>
 	void Attack();
+	//ワールド座標を取得
+	Vector3 GetWorldPosition();
 	
 	/// <summary>
 	///弾 
 	/// </summary>
 	std::list<std::unique_ptr<PlayerBullet>>bullets_;
 
-	//ワールド座標を取得
-	Vector3 GetWorldPosition();
+	//衝突を検出したら呼び出されるコールバック関数
+	void OnCollision();
+	//弾リストを取得
+	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() { return bullets_; }
 
 private:	//メンバー変数
 	//ワールド変換データ

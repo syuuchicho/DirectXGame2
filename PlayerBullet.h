@@ -19,12 +19,16 @@ public:
 	/// </summary>
 	void Draw(const ViewProjection& viewProjection);
 	
+	//座標を取得
+	Vector3 GetWorldPosition();
 	/// <summary>
 	///デスフラグゲッター
 	/// </summary>
 	/// <returns></returns>
 	bool IsDead()const { return isDead_; }
 
+	//衝突を検出したら呼び出されるコールバック関数
+	void OnCollision();
 private:
 	//ワールド変換データ
 	WorldTransform worldTransform_;

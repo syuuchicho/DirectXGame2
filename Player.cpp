@@ -115,10 +115,10 @@ void Player::Update() {
 	const float kMoveLimitY = 15;
 
 	//”ÍˆÍ‚ð’´‚¦‚È‚¢ˆ—
-	worldTransform_.translation_.x = max(worldTransform_.translation_.x, -kMoveLimitX);
-	worldTransform_.translation_.x = min(worldTransform_.translation_.x, +kMoveLimitX);
-	worldTransform_.translation_.y = max(worldTransform_.translation_.y, -kMoveLimitY);
-	worldTransform_.translation_.y = min(worldTransform_.translation_.y, +kMoveLimitY);
+	//worldTransform_.translation_.x = max(worldTransform_.translation_.x, -kMoveLimitX);
+	//worldTransform_.translation_.x = min(worldTransform_.translation_.x, +kMoveLimitX);
+	//worldTransform_.translation_.y = max(worldTransform_.translation_.y, -kMoveLimitY);
+	//worldTransform_.translation_.y = min(worldTransform_.translation_.y, +kMoveLimitY);
 
 	//s—ñ‚Ì“]‘—
 	worldTransform_.TransferMatrix();
@@ -134,7 +134,10 @@ void Player::Update() {
 		bullet->Update();
 	}
 }
-
+void Player::OnCollision()
+{
+	
+}
 void Player::Draw(ViewProjection& viewprojection) {
 	//3Dƒ‚ƒfƒ‹‚ð•`‰æ
 	model_->Draw(worldTransform_, viewprojection, textureHandle_);

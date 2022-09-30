@@ -53,6 +53,11 @@ public:
 	Vector3 GetWorldPosition();
 	//発射間隔
 	static const int kFireInterval = 60;
+
+	//衝突を検出したら呼び出されるコールバック関数
+	void OnCollision();
+	//弾リストを取得
+	const std::list<std::unique_ptr<EnemyBullet>>& GetBullets() { return bullets_; }
 private:
 	//自キャラ
 	Player* player_ = nullptr;
