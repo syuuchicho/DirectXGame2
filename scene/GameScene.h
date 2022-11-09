@@ -7,6 +7,7 @@
 #include "DebugCamera.h"
 #include "Player.h"
 #include "Enemy.h"
+#include"Skydome.h"
 
 
 /// <summary>
@@ -55,6 +56,7 @@ private: // メンバ変数
 
 	//3Dモデル
 	Model* model_ = nullptr;
+	Model* modelSkydome_ = nullptr;
 
 	//ビュープロジェクション
 	ViewProjection viewProjection_;
@@ -71,6 +73,8 @@ private: // メンバ変数
 	//敵
 	Enemy* enemy_ = nullptr;
 
+	//天球
+	Skydome* skydome_ = nullptr;
 	/// <summary>
 	/// ゲームシーン用
 	/// </summary>
