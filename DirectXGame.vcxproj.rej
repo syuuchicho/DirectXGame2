@@ -1,0 +1,9 @@
+diff a/DirectXGame.vcxproj b/DirectXGame.vcxproj	(rejected hunks)
+@@ -137,6 +137,7 @@
+     <ClInclude Include="Player.h" />
+     <ClInclude Include="PlayerBullet.h" />
+     <ClInclude Include="scene\GameScene.h" />
++    <ClInclude Include="Skydome.h" />
+   </ItemGroup>
+   <ItemGroup>
+     <None Include="Resources\shaders\Obj.hlsli" />
