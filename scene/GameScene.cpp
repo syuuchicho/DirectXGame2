@@ -9,7 +9,9 @@ GameScene::GameScene() {}
 
 GameScene::~GameScene() {
 	delete model_;
+	delete modelSkydome_;
 	delete debugCamera_;
+	delete skydome_;
 	//自キャラの解放
 	delete player_;
 	delete enemy_;
@@ -176,6 +178,12 @@ void GameScene::Initialize() {
 	//敵の初期化
 	enemy_->Initialize(model_,textureHandle_);
 
+	//天球の生成
+	skydome_ = new Skydome();
+	//天球モデルの生成
+	modelSkydome_ = Model::CreateFromOBJ("skydome",true);
+	//天球の初期化
+	skydome_->Initialize(modelSkydome_);
 }
 void GameScene::Update() {
 	//デバッグカメラの更新
@@ -421,9 +429,13 @@ void GameScene::Draw() {
 	
 	//敵の描画
 	enemy_->Draw(viewProjection_);
+
+	//天球の描画
+	skydome_->Draw();
+
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
-#pragma endregion
+#pragma endregion 
 	
 #pragma region 前景スプライト描画
 	// 前景スプライト描画前処理
