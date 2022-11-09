@@ -143,7 +143,6 @@ void Enemy::OnCollision()
 }
 
 void Enemy::Fire()
-
 {
 	assert(player_);
 

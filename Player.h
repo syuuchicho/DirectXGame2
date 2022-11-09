@@ -3,7 +3,7 @@
 #include "Input.h"
 #include "DebugText.h"
 #include<memory>
-//#include<list>
+#include<list>
 
 /// <summary>
 /// Ž©ƒLƒƒƒ‰
