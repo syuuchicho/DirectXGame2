@@ -56,7 +56,6 @@ private: // メンバ変数
 
 	//3Dモデル
 	Model* model_ = nullptr;
-	Model* modelSkydome_ = nullptr;
 
 	//ビュープロジェクション
 	ViewProjection viewProjection_;

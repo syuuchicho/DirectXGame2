@@ -178,12 +178,6 @@ void GameScene::Initialize() {
 	//敵の初期化
 	enemy_->Initialize(model_,textureHandle_);
 
-	//天球の生成
-	skydome_ = new Skydome();
-	//天球モデルの生成
-	modelSkydome_ = Model::CreateFromOBJ("skydome",true);
-	//天球の初期化
-	skydome_->Initialize(modelSkydome_);
 }
 void GameScene::Update() {
 	//デバッグカメラの更新
