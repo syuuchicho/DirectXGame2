@@ -52,6 +52,8 @@ public:	//メンバー関数
 	//弾リストを取得
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() { return bullets_; }
 
+	void SetParent(WorldTransform * worldTransform);
+
 private:	//メンバー変数
 	//ワールド変換データ
 	WorldTransform worldTransform_;

@@ -169,21 +169,31 @@ void GameScene::Initialize() {
 	//自キャラの生成
 	player_ = new Player();
 	//自キャラの初期化
-	player_->Initialize(model_,textureHandle_);
+	player_->Initialize(model_, textureHandle_);
 
 	//敵の生成
 	enemy_ = new Enemy();
 	//敵キャラに自キャラのアドレスを渡す
 	enemy_->SetPlayer(player_);
 	//敵の初期化
-	enemy_->Initialize(model_,textureHandle_);
+	enemy_->Initialize(model_, textureHandle_);
 
 	//天球の生成
 	skydome_ = new Skydome();
 	//天球モデルの生成
-	modelSkydome_ = Model::CreateFromOBJ("skydome",true);
+	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	//天球の初期化
 	skydome_->Initialize(modelSkydome_);
+
+	//レールカメラの生成
+	railCamera_ = new RailCamera();
+	//レールカメラの初期化
+	railCamera_->Initialize(Vector3(+7, +5, -15), Vector3(0,0,0));//position(+7,+5,-15)
+
+	//自キャラとレールカメラの親子関係を結ぶ
+	player_->SetParent(railCamera_->GetWorldTrans());
+
+
 }
 void GameScene::Update() {
 	//デバッグカメラの更新
@@ -194,86 +204,93 @@ void GameScene::Update() {
 	//敵の更新
 	enemy_->Update();
 
+	//レールカメラの更新
+	railCamera_->Update();
+	//レールカメラをゲームシーンのカメラに適応する
+	viewProjection_.matView = railCamera_->GetViewProjection().matView;
+	viewProjection_.matProjection = railCamera_->GetViewProjection().matProjection;
+	//ビュープロジェクションの転送
+	viewProjection_.TransferMatrix();
 	//当たり判定
 	CheckAllCollisions();
 #pragma region 視点移動処理
 	{
-	//	//視点の移動ベクトル
-	//	Vector3 move = { 0,0,0 };
+		//	//視点の移動ベクトル
+		//	Vector3 move = { 0,0,0 };
 
-	//	//視点の移動速さ
-	//	const float kEyeSpeed = 0.2f;
+		//	//視点の移動速さ
+		//	const float kEyeSpeed = 0.2f;
 
-	//	//押した方向で移動ベクトルを変更
-	//	if (input_->PushKey(DIK_W)) {
-	//		move.z += kEyeSpeed;
-	//	}
-	//	else if (input_->PushKey(DIK_S)) {
-	//		move.z -= kEyeSpeed;
-	//	}
-	//	//視点移動(ベクトルの加算)
-	////	viewProjection_.eye += move;
+		//	//押した方向で移動ベクトルを変更
+		//	if (input_->PushKey(DIK_W)) {
+		//		move.z += kEyeSpeed;
+		//	}
+		//	else if (input_->PushKey(DIK_S)) {
+		//		move.z -= kEyeSpeed;
+		//	}
+		//	//視点移動(ベクトルの加算)
+		////	viewProjection_.eye += move;
 
-	//	//行列の再計算
-	//	viewProjection_.UpdateMatrix();
+		//	//行列の再計算
+		//	viewProjection_.UpdateMatrix();
 
-	//	//デバッグ用表示
-	//	debugText_->SetPos(50, 50);
-	//	debugText_->Printf(
-	//		"eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
+		//	//デバッグ用表示
+		//	debugText_->SetPos(50, 50);
+		//	debugText_->Printf(
+		//		"eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
 	}
 #pragma endregion
 
 #pragma region 注視点移動処理
 	{
-	//	//注視点の移動ベクトル
-	//	Vector3 move = { 0,0,0 };
+		//	//注視点の移動ベクトル
+		//	Vector3 move = { 0,0,0 };
 
-	//	//注視点の移動速さ
-	//	const float kTargetSpeed = 0.2f;
+		//	//注視点の移動速さ
+		//	const float kTargetSpeed = 0.2f;
 
-	//	//押した方向で移動ベクトルを変更
-	//	if (input_->PushKey(DIK_LEFT)) {
-	//		move.x += kTargetSpeed;
-	//	}
-	//	else if (input_->PushKey(DIK_RIGHT)) {
-	//		move.x -= kTargetSpeed;
-	//	}
-	//	//視点移動(ベクトルの加算)
-	////	viewProjection_.target += move;
+		//	//押した方向で移動ベクトルを変更
+		//	if (input_->PushKey(DIK_LEFT)) {
+		//		move.x += kTargetSpeed;
+		//	}
+		//	else if (input_->PushKey(DIK_RIGHT)) {
+		//		move.x -= kTargetSpeed;
+		//	}
+		//	//視点移動(ベクトルの加算)
+		////	viewProjection_.target += move;
 
-	//	//行列の再計算
-	//	viewProjection_.UpdateMatrix();
+		//	//行列の再計算
+		//	viewProjection_.UpdateMatrix();
 
-	//	//デバッグ用表示
-	//	debugText_->SetPos(50, 70);
-	//	debugText_->Printf(
-	//		"target:(%f,%f,%f)", viewProjection_.target.x, viewProjection_.target.y, viewProjection_.target.z);
+		//	//デバッグ用表示
+		//	debugText_->SetPos(50, 70);
+		//	debugText_->Printf(
+		//		"target:(%f,%f,%f)", viewProjection_.target.x, viewProjection_.target.y, viewProjection_.target.z);
 	}
 #pragma endregion
 
 #pragma region 上方向回転処理
 	{
-	//	//上方向の回転速さ[ラジアン/frame]
-	//	const float kUpRotSpeed = 0.05f;
+		//	//上方向の回転速さ[ラジアン/frame]
+		//	const float kUpRotSpeed = 0.05f;
 
-	//	//押した方向で移動ベクトルを変更
-	//	if (input_->PushKey(DIK_SPACE)) {
-	//		viewAngle += kUpRotSpeed;
-	//		//2πを超えたら0に戻す
-	//		viewAngle = fmodf(viewAngle, 3.14 * 2.0f);
-	//	}
+		//	//押した方向で移動ベクトルを変更
+		//	if (input_->PushKey(DIK_SPACE)) {
+		//		viewAngle += kUpRotSpeed;
+		//		//2πを超えたら0に戻す
+		//		viewAngle = fmodf(viewAngle, 3.14 * 2.0f);
+		//	}
 
-	//	//上方向ベクトルを計算(半径1の円周上の座標)
-	////	viewProjection_.up = { cosf(viewAngle),sinf(viewAngle),0.0f };
+		//	//上方向ベクトルを計算(半径1の円周上の座標)
+		////	viewProjection_.up = { cosf(viewAngle),sinf(viewAngle),0.0f };
 
-	//	//行列の再計算
-	//	viewProjection_.UpdateMatrix();
+		//	//行列の再計算
+		//	viewProjection_.UpdateMatrix();
 
-	//	//デバッグ用表示
-	//	debugText_->SetPos(50, 90);
-	//	debugText_->Printf(
-	//		"up:(%f,%f,%f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
+		//	//デバッグ用表示
+		//	debugText_->SetPos(50, 90);
+		//	debugText_->Printf(
+		//		"up:(%f,%f,%f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
 	}
 #pragma endregion
 
@@ -373,7 +390,7 @@ void GameScene::CheckAllCollisions() {
 #pragma endregion
 
 #pragma region 自弾と敵弾の当たり判定
-	
+
 	//敵キャラと自弾全ての当たり判定
 	for (const std::unique_ptr<PlayerBullet>& playerBullet : playerBullets) {
 		//自弾の座標
@@ -426,17 +443,20 @@ void GameScene::Draw() {
 	/// </summary>
 	//自キャラの描画
 	player_->Draw(viewProjection_);
-	
+
 	//敵の描画
 	enemy_->Draw(viewProjection_);
 
 	//天球の描画
 	skydome_->Draw();
 
+	//レールカメラデバッグテキスト
+	railCamera_->Draw();
+
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion 
-	
+
 #pragma region 前景スプライト描画
 	// 前景スプライト描画前処理
 	Sprite::PreDraw(commandList);
@@ -447,7 +467,7 @@ void GameScene::Draw() {
 
 	// デバッグテキストの描画
 	debugText_->DrawAll(commandList);
-	
+
 	// スプライト描画後処理
 	Sprite::PostDraw();
 

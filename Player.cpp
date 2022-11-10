@@ -97,6 +97,9 @@ void Player::Update() {
 		move.y -= moveSpeed;
 	}
 
+	//ƒJƒƒ‰’Ç]
+	worldTransform_.matWorld_ *= worldTransform_.parent_->matWorld_;
+
 	worldTransform_.translation_ += move;
 	//’PˆÊs—ñ
 	worldTransform_.matWorld_ = worldTransform_.CreateIdentityMatrix();
@@ -122,7 +125,7 @@ void Player::Update() {
 
 	//s—ñ‚Ì“]‘—
 	worldTransform_.TransferMatrix();
-
+	
 	/*debugText_->SetPos(50, 50);
 	debugText_->Printf("PosX:%f", worldTransform_.translation_.x);
 	debugText_->SetPos(50, 70);
@@ -134,6 +137,12 @@ void Player::Update() {
 		bullet->Update();
 	}
 }
+
+void Player::SetParent(WorldTransform *worldTransform)
+{
+	worldTransform_.parent_ = worldTransform;
+}
+
 void Player::OnCollision()
 {
 	

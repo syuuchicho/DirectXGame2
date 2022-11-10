@@ -1,6 +1,5 @@
 #pragma once
 #include"Model.h"
-#include"WorldTransform.h"
 #include"assert.h"
 
 /// <summary>
